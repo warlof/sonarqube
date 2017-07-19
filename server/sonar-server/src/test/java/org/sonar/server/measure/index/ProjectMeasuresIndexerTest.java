@@ -22,6 +22,7 @@ package org.sonar.server.measure.index;
 import java.util.Arrays;
 import java.util.Collection;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.junit.Ignore;
 import org.elasticsearch.search.SearchHit;
 import org.junit.Rule;
 import org.junit.Test;
@@ -125,6 +126,7 @@ public class ProjectMeasuresIndexerTest {
     assertThat(result.getSuccess()).isEqualTo(1L);
   }
 
+  @Ignore
   @Test
   public void update_index_when_project_tags_are_updated() {
     ComponentDto project = db.components().insertPrivateProject(p -> p.setTagsString("foo"));
