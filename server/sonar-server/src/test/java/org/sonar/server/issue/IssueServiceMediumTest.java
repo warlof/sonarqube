@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.sonar.api.issue.Issue;
@@ -51,6 +52,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+@Ignore("because relies on currently broken SearchServer (through ServerTester)")
 public class IssueServiceMediumTest {
 
   @ClassRule
