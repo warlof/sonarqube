@@ -22,98 +22,37 @@ package org.sonar.server.es;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Properties;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
-import org.sonar.process.NetworkUtils;
-import org.sonar.process.ProcessEntryPoint;
-import org.sonar.process.ProcessProperties;
-import org.sonar.process.Props;
-import org.sonar.search.SearchServer;
 
+@Deprecated
 public class EsServerHolder {
 
-  private static EsServerHolder HOLDER = null;
-  private final String clusterName;
-  private final InetAddress address;
-  private final int port;
-  private final File homeDir;
-  private final SearchServer server;
-
-  private EsServerHolder(SearchServer server, String clusterName, InetAddress address, int port, File homeDir) {
-    this.server = server;
-    this.clusterName = clusterName;
-    this.address = address;
-    this.port = port;
-    this.homeDir = homeDir;
+  private EsServerHolder(Object server, String clusterName, InetAddress address, int port, File homeDir) {
   }
 
   public String getClusterName() {
-    return clusterName;
+    return null;
   }
 
   public int getPort() {
-    return port;
+    return 0;
   }
 
   public InetAddress getAddress() {
-    return address;
+    return null;
   }
 
-  public SearchServer getServer() {
-    return server;
+  public Object getServer() {
+    return null;
   }
 
   public File getHomeDir() {
-    return homeDir;
+    return null;
   }
 
   private void reset() {
-    TransportClient client = new PreBuiltTransportClient(Settings.builder()
-      .put("network.bind_host", "localhost")
-      .put("cluster.name", clusterName)
-      .build(), Collections.emptyList()) {};
-    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getLoopbackAddress(), port));
-
-    // wait for node to be ready
-    client.admin().cluster().prepareHealth()
-      .setWaitForGreenStatus()
-      .get();
-
-    // delete the indices created by previous tests
-    DeleteIndexResponse response = client.admin().indices().prepareDelete("_all").get();
-    if (!response.isAcknowledged()) {
-      throw new IllegalStateException("Fail to delete all indices");
-    }
-    client.close();
   }
 
   public static synchronized EsServerHolder get() throws IOException {
-    if (HOLDER == null) {
-      File homeDir = Files.createTempDirectory("tmp-es-").toFile();
-      homeDir.delete();
-      homeDir.mkdir();
-
-      String clusterName = "testCluster";
-      InetAddress address = InetAddress.getLoopbackAddress();
-      int port = NetworkUtils.getNextAvailablePort(address);
-
-      Properties properties = new Properties();
-      properties.setProperty(ProcessProperties.CLUSTER_NAME, clusterName);
-      properties.setProperty(ProcessProperties.SEARCH_PORT, String.valueOf(port));
-      properties.setProperty(ProcessProperties.SEARCH_HOST, address.getHostAddress());
-      properties.setProperty(ProcessProperties.PATH_HOME, homeDir.getAbsolutePath());
-      properties.setProperty(ProcessEntryPoint.PROPERTY_SHARED_PATH, homeDir.getAbsolutePath());
-      SearchServer server = new SearchServer(new Props(properties));
-      server.start();
-      HOLDER = new EsServerHolder(server, clusterName, address, port, homeDir);
-    }
-    HOLDER.reset();
-    return HOLDER;
+    return null;
   }
 }
