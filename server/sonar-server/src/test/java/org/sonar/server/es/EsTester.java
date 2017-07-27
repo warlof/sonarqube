@@ -114,7 +114,7 @@ public class EsTester extends ExternalResource {
       public Settings nodeSettings(int nodeOrdinal) {
         return Settings.builder()
           .put(NetworkModule.HTTP_ENABLED.getKey(), false)
-          .put(DiscoveryModule.DISCOVERY_TYPE_SETTING.getKey(), "local")
+          .put(DiscoveryModule.DISCOVERY_TYPE_SETTING.getKey(), "single-node")
           .put(networkSettings.build())
           .build();
       }
