@@ -678,8 +678,7 @@ public class IssueIndex {
       long from = froms.get(i);
       request
         .addAggregation(AggregationBuilders
-          .filter(projectUuid)
-          .filter(boolQuery()
+          .filter(projectUuid, boolQuery()
             .filter(termQuery(IssueIndexDefinition.FIELD_ISSUE_PROJECT_UUID, projectUuid))
             .filter(rangeQuery(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT).gte(new Date(from)))
           )
