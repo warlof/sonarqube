@@ -65,6 +65,7 @@ import org.sonar.api.utils.DateUtils;
 import org.sonar.api.utils.System2;
 import org.sonar.core.util.stream.MoreCollectors;
 import org.sonar.db.organization.OrganizationDto;
+import org.sonar.server.es.BaseDoc;
 import org.sonar.server.es.EsClient;
 import org.sonar.server.es.EsUtils;
 import org.sonar.server.es.SearchOptions;
@@ -427,16 +428,16 @@ public class IssueIndex {
     if (createdAfter != null) {
       filters.put("__createdAfter", QueryBuilders
         .rangeQuery(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT)
-        .gte(createdAfter));
+        .gte(BaseDoc.dateToEpochSeconds(createdAfter)));
     }
     if (createdBefore != null) {
       filters.put("__createdBefore", QueryBuilders
         .rangeQuery(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT)
-        .lt(createdBefore));
+        .lt(BaseDoc.dateToEpochSeconds(createdBefore)));
     }
     Date createdAt = query.createdAt();
     if (createdAt != null) {
-      filters.put("__createdAt", termQuery(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT, createdAt));
+      filters.put("__createdAt", termQuery(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT, BaseDoc.dateToEpochSeconds(createdAt)));
     }
   }
 
