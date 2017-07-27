@@ -67,6 +67,9 @@ public abstract class BaseDoc {
       if (val instanceof Date) {
         return (Date)val;
       }
+      if (val instanceof Number) {
+        return epochSecondsToDate((Number) val);
+      }
       return EsUtils.parseDateTime((String) val);
     }
     return null;
@@ -94,6 +97,9 @@ public abstract class BaseDoc {
     if (value instanceof Date) {
       return (Date)value;
     }
+    if (value instanceof Number) {
+      return epochSecondsToDate((Number) value);
+    }
     return EsUtils.parseDateTime((String)value);
   }
 
@@ -112,6 +118,10 @@ public abstract class BaseDoc {
 
   public static long epochMillisToEpochSeconds(long epochMillis) {
     return epochMillis / 1000L;
+  }
+
+  private Date epochSecondsToDate(Number value) {
+    return new Date(value.longValue() * 1000L);
   }
 
   public static long dateToEpochSeconds(Date date) {
