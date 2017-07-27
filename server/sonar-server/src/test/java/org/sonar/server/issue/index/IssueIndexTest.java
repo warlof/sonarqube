@@ -449,7 +449,6 @@ public class IssueIndexTest {
     assertThatSearchReturnsOnly(IssueQuery.builder().resolved(null), "I1", "I2", "I3");
   }
 
-  @Ignore
   @Test
   public void filter_by_rules() {
     ComponentDto project = ComponentTesting.newPrivateProjectDto(newOrganizationDto());
