@@ -22,7 +22,6 @@ package org.sonar.server.platform.monitoring;
 import java.util.Map;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.sonar.api.config.internal.MapSettings;
@@ -54,7 +53,6 @@ public class EsMonitorTest {
     assertThat(attributes.get("Number of Nodes")).isEqualTo(1);
   }
 
-  @Ignore
   @Test
   public void node_attributes() {
     Map<String, Object> attributes = underTest.attributes();
