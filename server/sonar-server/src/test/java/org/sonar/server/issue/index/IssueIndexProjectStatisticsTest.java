@@ -161,7 +161,7 @@ public class IssueIndexProjectStatisticsTest {
     ComponentDto project = ComponentTesting.newPrivateProjectDto(org1);
     String userLogin1 = randomAlphanumeric(20);
     long from = 1_111_234_567_890L;
-    indexIssues(newDoc("issue1", project).setAssignee(userLogin1).setFuncCreationDate(new Date(from-1L)));
+    indexIssues(newDoc("issue1", project).setAssignee(userLogin1).setFuncCreationDate(new Date(from-1000L)));
 
     List<ProjectStatistics> result = underTest.searchProjectStatistics(singletonList(project.uuid()), singletonList(from), userLogin1);
 

@@ -85,6 +85,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
+import static org.sonar.server.es.BaseDoc.epochMillisToEpochSeconds;
 import static org.sonar.server.es.EsUtils.escapeSpecialRegexChars;
 import static org.sonar.server.issue.index.IssueIndexDefinition.FIELD_ISSUE_ORGANIZATION_UUID;
 import static org.sonar.server.issue.index.IssueIndexDefinition.INDEX_TYPE_ISSUE;
@@ -681,7 +682,7 @@ public class IssueIndex {
         .addAggregation(AggregationBuilders
           .filter(projectUuid, boolQuery()
             .filter(termQuery(IssueIndexDefinition.FIELD_ISSUE_PROJECT_UUID, projectUuid))
-            .filter(rangeQuery(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT).gte(new Date(from)))
+            .filter(rangeQuery(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT).gte(epochMillisToEpochSeconds(from)))
           )
           .subAggregation(AggregationBuilders.count(projectUuid + "_count").field(IssueIndexDefinition.FIELD_ISSUE_KEY))
           .subAggregation(AggregationBuilders.max(projectUuid + "_maxFuncCreatedAt").field(IssueIndexDefinition.FIELD_ISSUE_FUNC_CREATED_AT))
