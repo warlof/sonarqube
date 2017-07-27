@@ -10,4 +10,4 @@ EOF
     exit 1
 fi
 
-ES_CLASSPATH="$ES_HOME/lib/elasticsearch-5.2.2.jar:$ES_HOME/lib/*"
+ES_CLASSPATH="$ES_HOME/lib/elasticsearch-5.3.3.jar:$ES_HOME/lib/*"
