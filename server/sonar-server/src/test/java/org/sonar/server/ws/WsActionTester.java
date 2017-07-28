@@ -44,4 +44,12 @@ public class WsActionTester {
     request.setAction(action);
     return request;
   }
+
+  /**
+   * @deprecated use {@link #newRequest()}
+   */
+  @Deprecated
+  public TestRequest newGetRequest(String s, String compare) {
+    return newRequest();
+  }
 }
