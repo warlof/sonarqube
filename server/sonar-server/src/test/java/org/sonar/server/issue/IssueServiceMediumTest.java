@@ -100,33 +100,6 @@ public class IssueServiceMediumTest {
     return IssueQuery.builder().projectUuids(asList(projectUuid)).resolved(false).build();
   }
 
-  @Test
-  public void test_listAuthors() {
-    RuleDto rule = newRule();
-    ComponentDto project = newPublicProject();
-    ComponentDto file = newFile(project);
-    saveIssue(IssueTesting.newDto(rule, file, project).setAuthorLogin("luke.skywalker"));
-    saveIssue(IssueTesting.newDto(rule, file, project).setAuthorLogin("luke@skywalker.name"));
-    saveIssue(IssueTesting.newDto(rule, file, project));
-    saveIssue(IssueTesting.newDto(rule, file, project).setAuthorLogin("anakin@skywalker.name"));
-
-    assertThat(service.listAuthors(null, 5)).containsExactly("anakin@skywalker.name", "luke.skywalker", "luke@skywalker.name");
-    assertThat(service.listAuthors(null, 2)).containsExactly("anakin@skywalker.name", "luke.skywalker");
-    assertThat(service.listAuthors("uke", 5)).containsExactly("luke.skywalker", "luke@skywalker.name");
-    assertThat(service.listAuthors(null, 1)).containsExactly("anakin@skywalker.name");
-    assertThat(service.listAuthors(null, Integer.MAX_VALUE)).containsExactly("anakin@skywalker.name", "luke.skywalker", "luke@skywalker.name");
-  }
-
-  @Test
-  public void listAuthors_escapes_regexp_special_characters() {
-    saveIssue(IssueTesting.newDto(newRule(), newFile(newPublicProject()), newPublicProject()).setAuthorLogin("name++"));
-
-    assertThat(service.listAuthors("invalidRegexp[", 5)).isEmpty();
-    assertThat(service.listAuthors("nam+", 5)).isEmpty();
-    assertThat(service.listAuthors("name+", 5)).containsExactly("name++");
-    assertThat(service.listAuthors(".*", 5)).isEmpty();
-  }
-
   private RuleDto newRule() {
     return newRule(RuleTesting.newXooX1());
   }

@@ -1158,6 +1158,42 @@ public class IssueIndexTest {
   }
 
   @Test
+  public void test_listAuthors() {
+    OrganizationDto org = newOrganizationDto();
+    ComponentDto project = ComponentTesting.newPrivateProjectDto(org);
+    indexIssues(
+      newDoc("issue1", project).setAuthorLogin("luke.skywalker"),
+      newDoc("issue2", project).setAuthorLogin("luke@skywalker.name"),
+      newDoc("issue3", project).setAuthorLogin(null),
+      newDoc("issue4", project).setAuthorLogin("anakin@skywalker.name"));
+    IssueQuery query = IssueQuery.builder()
+      .checkAuthorization(false)
+      .build();
+
+    assertThat(underTest.listAuthors(query, null, 5)).containsExactly("anakin@skywalker.name", "luke.skywalker", "luke@skywalker.name");
+    assertThat(underTest.listAuthors(query, null, 2)).containsExactly("anakin@skywalker.name", "luke.skywalker");
+    assertThat(underTest.listAuthors(query, "uke", 5)).containsExactly("luke.skywalker", "luke@skywalker.name");
+    assertThat(underTest.listAuthors(query, null, 1)).containsExactly("anakin@skywalker.name");
+    assertThat(underTest.listAuthors(query, null, Integer.MAX_VALUE)).containsExactly("anakin@skywalker.name", "luke.skywalker", "luke@skywalker.name");
+  }
+
+  @Test
+  public void listAuthors_escapes_regexp_special_characters() {
+    OrganizationDto org = newOrganizationDto();
+    ComponentDto project = ComponentTesting.newPrivateProjectDto(org);
+    indexIssues(
+      newDoc("issue1", project).setAuthorLogin("name++"));
+    IssueQuery query = IssueQuery.builder()
+      .checkAuthorization(false)
+      .build();
+
+    assertThat(underTest.listAuthors(query, "invalidRegexp[", 5)).isEmpty();
+    assertThat(underTest.listAuthors(query, "nam+", 5)).isEmpty();
+    assertThat(underTest.listAuthors(query, "name+", 5)).containsExactly("name++");
+    assertThat(underTest.listAuthors(query, ".*", 5)).isEmpty();
+  }
+
+  @Test
   public void filter_by_organization() {
     OrganizationDto org1 = newOrganizationDto();
     ComponentDto projectInOrg1 = ComponentTesting.newPrivateProjectDto(org1);

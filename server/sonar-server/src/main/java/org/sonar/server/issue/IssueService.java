@@ -19,9 +19,7 @@
  */
 package org.sonar.server.issue;
 
-import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.sonar.api.ce.ComputeEngineSide;
 import org.sonar.api.server.ServerSide;
 import org.sonar.server.issue.index.IssueIndex;
@@ -34,13 +32,6 @@ public class IssueService {
 
   public IssueService(IssueIndex issueIndex) {
     this.issueIndex = issueIndex;
-  }
-
-  public List<String> listAuthors(@Nullable String textQuery, int pageSize) {
-    IssueQuery query = IssueQuery.builder()
-      .checkAuthorization(false)
-      .build();
-    return issueIndex.listAuthors(query, textQuery, pageSize);
   }
 
   public Map<String, Long> listTagsForComponent(IssueQuery query, int pageSize) {
