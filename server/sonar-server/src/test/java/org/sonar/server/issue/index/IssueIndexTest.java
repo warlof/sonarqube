@@ -32,7 +32,6 @@ import org.assertj.core.api.Fail;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -773,7 +772,6 @@ public class IssueIndexTest {
 
   }
 
-  @Ignore
   @Test
   public void facet_on_created_at_with_one_day() {
     SearchOptions options = fixtureForCreatedAtFacet();
