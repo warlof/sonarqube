@@ -52,4 +52,12 @@ public class WsActionTester {
   public TestRequest newGetRequest(String s, String compare) {
     return newRequest();
   }
+
+  /**
+   * @deprecated use {@link #newRequest()}
+   */
+  @Deprecated
+  public TestRequest newPostRequest(String apiEndpoint, String actionDeactivateRule) {
+    return newRequest().setMethod("POST");
+  }
 }
