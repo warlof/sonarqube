@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.sonar.api.resources.Qualifiers;
 import org.sonar.api.resources.Scopes;
 import org.sonar.api.server.ServerSide;
@@ -37,6 +38,7 @@ import org.sonar.db.permission.OrganizationPermission;
 import org.sonar.db.property.PropertyDto;
 import org.sonar.scanner.protocol.input.FileData;
 import org.sonar.scanner.protocol.input.ProjectRepositories;
+import org.sonar.server.component.ComponentFinder;
 import org.sonar.server.exceptions.ForbiddenException;
 import org.sonar.server.user.UserSession;
 
@@ -44,7 +46,6 @@ import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
 import static org.sonar.api.web.UserRole.USER;
 import static org.sonar.core.permission.GlobalPermissions.SCAN_EXECUTION;
-import static org.sonar.server.ws.WsUtils.checkFoundWithOptional;
 import static org.sonar.server.ws.WsUtils.checkRequest;
 
 @ServerSide
@@ -52,17 +53,18 @@ public class ProjectDataLoader {
 
   private final DbClient dbClient;
   private final UserSession userSession;
+  private final ComponentFinder componentFinder;
 
-  public ProjectDataLoader(DbClient dbClient, UserSession userSession) {
+  public ProjectDataLoader(DbClient dbClient, UserSession userSession, ComponentFinder componentFinder) {
     this.dbClient = dbClient;
     this.userSession = userSession;
+    this.componentFinder = componentFinder;
   }
 
   public ProjectRepositories load(ProjectDataQuery query) {
     try (DbSession session = dbClient.openSession(false)) {
       ProjectRepositories data = new ProjectRepositories();
-      ComponentDto module = checkFoundWithOptional(dbClient.componentDao().selectByKey(session, query.getModuleKey()),
-        "Project or module with key '%s' is not found", query.getModuleKey());
+      ComponentDto module = componentFinder.getByKey(session, query.getModuleKey());
       checkRequest(isProjectOrModule(module), "Key '%s' belongs to a component which is not a Project", query.getModuleKey());
 
       boolean hasScanPerm = userSession.hasComponentPermission(SCAN_EXECUTION, module) ||
@@ -70,20 +72,23 @@ public class ProjectDataLoader {
       boolean hasBrowsePerm = userSession.hasComponentPermission(USER, module);
       checkPermission(query.isIssuesMode(), hasScanPerm, hasBrowsePerm);
 
+      String branch = query.getBranch();
+      Optional<ComponentDto> branchDto = branch == null ? Optional.of(module) : dbClient.componentDao().selectByKeyAndBranch(session, query.getModuleKey(), branch);
+
       ComponentDto project = getProject(module, session);
-      if (!project.getDbKey().equals(module.getDbKey())) {
-        addSettings(data, module.getDbKey(), getSettingsFromParents(module, hasScanPerm, session));
+      if (!project.getKey().equals(module.getKey())) {
+        addSettings(data, module.getKey(), getSettingsFromParents(module, hasScanPerm, session));
       }
 
-      List<ComponentDto> modulesTree = dbClient.componentDao().selectEnabledDescendantModules(session, module.uuid());
+      List<ComponentDto> modulesTree = dbClient.componentDao().selectEnabledDescendantModules(session, branchDto.get().uuid());
       Map<String, String> moduleUuidsByKey = moduleUuidsByKey(modulesTree);
       Map<String, Long> moduleIdsByKey = moduleIdsByKey(modulesTree);
 
       List<PropertyDto> modulesTreeSettings = dbClient.propertiesDao().selectEnabledDescendantModuleProperties(module.uuid(), session);
       TreeModuleSettings treeModuleSettings = new TreeModuleSettings(moduleUuidsByKey, moduleIdsByKey, modulesTree, modulesTreeSettings);
 
-      addSettingsToChildrenModules(data, query.getModuleKey(), Maps.<String, String>newHashMap(), treeModuleSettings, hasScanPerm);
-      List<FilePathWithHashDto> files = searchFilesWithHashAndRevision(session, module);
+      addSettingsToChildrenModules(data, query.getModuleKey(), Maps.newHashMap(), treeModuleSettings, hasScanPerm);
+      List<FilePathWithHashDto> files = searchFilesWithHashAndRevision(session, branchDto.get());
       addFileData(data, modulesTree, files);
 
       // FIXME need real value but actually only used to know if there is a previous analysis in local issue tracking mode so any value is
@@ -121,7 +126,7 @@ public class ProjectDataLoader {
 
     Map<String, String> parentProperties = newHashMap();
     for (ComponentDto parent : parents) {
-      parentProperties.putAll(getPropertiesMap(dbClient.propertiesDao().selectProjectProperties(session, parent.getDbKey()), hasScanPerm));
+      parentProperties.putAll(getPropertiesMap(dbClient.propertiesDao().selectProjectProperties(session, parent.getKey()), hasScanPerm));
     }
     return parentProperties;
   }
@@ -145,8 +150,8 @@ public class ProjectDataLoader {
     addSettings(ref, moduleKey, currentParentProperties);
 
     for (ComponentDto childModule : treeModuleSettings.findChildrenModule(moduleKey)) {
-      addSettings(ref, childModule.getDbKey(), currentParentProperties);
-      addSettingsToChildrenModules(ref, childModule.getDbKey(), currentParentProperties, treeModuleSettings, hasScanPerm);
+      addSettings(ref, childModule.getKey(), currentParentProperties);
+      addSettingsToChildrenModules(ref, childModule.getKey(), currentParentProperties, treeModuleSettings, hasScanPerm);
     }
   }
 
@@ -175,7 +180,7 @@ public class ProjectDataLoader {
   private static void addFileData(ProjectRepositories data, List<ComponentDto> moduleChildren, List<FilePathWithHashDto> files) {
     Map<String, String> moduleKeysByUuid = newHashMap();
     for (ComponentDto module : moduleChildren) {
-      moduleKeysByUuid.put(module.uuid(), module.getDbKey());
+      moduleKeysByUuid.put(module.uuid(), module.getKey());
     }
 
     for (FilePathWithHashDto file : files) {
@@ -200,7 +205,7 @@ public class ProjectDataLoader {
   private static Map<String, String> moduleUuidsByKey(List<ComponentDto> moduleChildren) {
     Map<String, String> moduleUuidsByKey = newHashMap();
     for (ComponentDto componentDto : moduleChildren) {
-      moduleUuidsByKey.put(componentDto.getDbKey(), componentDto.uuid());
+      moduleUuidsByKey.put(componentDto.getKey(), componentDto.uuid());
     }
     return moduleUuidsByKey;
   }
@@ -208,7 +213,7 @@ public class ProjectDataLoader {
   private static Map<String, Long> moduleIdsByKey(List<ComponentDto> moduleChildren) {
     Map<String, Long> moduleIdsByKey = newHashMap();
     for (ComponentDto componentDto : moduleChildren) {
-      moduleIdsByKey.put(componentDto.getDbKey(), componentDto.getId());
+      moduleIdsByKey.put(componentDto.getKey(), componentDto.getId());
     }
     return moduleIdsByKey;
   }
