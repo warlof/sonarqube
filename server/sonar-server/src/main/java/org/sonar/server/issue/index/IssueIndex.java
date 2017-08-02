@@ -230,11 +230,12 @@ public class IssueIndex {
 
     BoolQueryBuilder viewsFilter = boolQuery();
     for (String viewUuid : viewUuids) {
-      viewsFilter.should(QueryBuilders.termsLookupQuery(IssueIndexDefinition.FIELD_ISSUE_PROJECT_UUID)
-        .lookupIndex(ViewIndexDefinition.INDEX_TYPE_VIEW.getIndex())
-        .lookupType(ViewIndexDefinition.INDEX_TYPE_VIEW.getType())
-        .lookupId(viewUuid)
-        .lookupPath(ViewIndexDefinition.FIELD_PROJECTS));
+      viewsFilter.should(QueryBuilders.termsLookupQuery(IssueIndexDefinition.FIELD_ISSUE_PROJECT_UUID,
+        new TermsLookup(
+          ViewIndexDefinition.INDEX_TYPE_VIEW.getIndex(),
+          ViewIndexDefinition.INDEX_TYPE_VIEW.getType(),
+          viewUuid,
+          ViewIndexDefinition.FIELD_PROJECTS)));
     }
     return viewsFilter;
   }
